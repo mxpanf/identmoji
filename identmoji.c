@@ -61,39 +61,79 @@ void md5_to_string(unsigned char *hash, char *output) {
 
 /**
  * Retrieves unique system data to be used for generating the identifier.
- * This includes UUID, CPU serial number, and disk serial number.
+ * This includes UUID, operating system name, CPU model name, CPU clock speed, and disk serial number.
  * 
  * @param output The output buffer where the combined system data will be stored.
  */
 void get_system_data(char *output) {
     FILE *fp;
     char uuid[256] = "no-uuid";
-    char cpu_serial[256] = "no-cpu-serial";
+    char os_name[256] = "no-os";
+    char cpu_model[256] = "no-cpu-model";
+    char cpu_mhz[256] = "no-cpu-mhz";
     char disk_serial[256] = "no-disk-serial";
 
     // Get UUID from system
     fp = fopen("/sys/class/dmi/id/product_uuid", "r");
     if (fp != NULL) {
-        fscanf(fp, "%255s", uuid);
+        if (fscanf(fp, "%255s", uuid) != 1) {
+            fprintf(stderr, "Warning: Could not read UUID\n");
+        }
         fclose(fp);
+    } else {
+        fprintf(stderr, "Error: Unable to open /sys/class/dmi/id/product_uuid\n");
     }
 
-    // Get CPU serial number
-    fp = popen("grep -m1 'Serial' /proc/cpuinfo | awk '{print $3}'", "r");
+    // Get OS name (without version)
+    fp = fopen("/etc/os-release", "r");
     if (fp != NULL) {
-        fscanf(fp, "%255s", cpu_serial);
+        while (fgets(os_name, sizeof(os_name), fp)) {
+            if (strncmp(os_name, "NAME=", 5) == 0) {
+                // Extract OS name (e.g., NAME="Ubuntu")
+                sscanf(os_name, "NAME=\"%255[^\"]\"", os_name);
+                break;
+            }
+        }
+        fclose(fp);
+    } else {
+        fprintf(stderr, "Error: Unable to read /etc/os-release for OS name\n");
+    }
+
+    // Get CPU model name
+    fp = popen("grep -m1 'model name' /proc/cpuinfo | awk -F: '{print $2}'", "r");
+    if (fp != NULL) {
+        if (fgets(cpu_model, sizeof(cpu_model), fp) == NULL) {
+            fprintf(stderr, "Warning: Could not read CPU model\n");
+        }
         pclose(fp);
+    } else {
+        fprintf(stderr, "Error: Unable to read CPU model from /proc/cpuinfo\n");
+    }
+
+    // Get CPU clock speed (cpu MHz)
+    fp = popen("grep -m1 'cpu MHz' /proc/cpuinfo | awk -F: '{print $2}'", "r");
+    if (fp != NULL) {
+        if (fgets(cpu_mhz, sizeof(cpu_mhz), fp) == NULL) {
+            fprintf(stderr, "Warning: Could not read CPU clock speed\n");
+        }
+        pclose(fp);
+    } else {
+        fprintf(stderr, "Error: Unable to read CPU clock speed from /proc/cpuinfo\n");
     }
 
     // Get disk serial number
     fp = popen("udevadm info --query=all --name=/dev/sda | grep 'ID_SERIAL=' | awk -F= '{print $2}'", "r");
     if (fp != NULL) {
-        fscanf(fp, "%255s", disk_serial);
+        if (fscanf(fp, "%255s", disk_serial) != 1) {
+            fprintf(stderr, "Warning: Could not read disk serial\n");
+        }
         pclose(fp);
+    } else {
+        fprintf(stderr, "Error: Unable to read disk serial from /dev/sda\n");
     }
 
     // Combine all system data into one string
-    snprintf(output, 1024, "%s%s%s", uuid, cpu_serial, disk_serial);
+    snprintf(output, 1024, "%s%s%s%s%s", uuid, os_name, cpu_model, cpu_mhz, disk_serial);
 }
 
 /**
