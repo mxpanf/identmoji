@@ -2,9 +2,17 @@ name: Idenmoji Build
 
 on:
   push:
-    branches: [ "main" ]
+    paths:
+      - 'Makefile'
+      - 'identmoji.c'
+    branches:
+      - main
   pull_request:
-    branches: [ "main" ]
+    paths:
+      - 'Makefile'
+      - 'identmoji.c'
+    branches:
+      - main
   workflow_dispatch: # Allow manually triggering the workflow
 
 jobs:

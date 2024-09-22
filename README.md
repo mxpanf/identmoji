@@ -1,5 +1,7 @@
 # 🫥 Identmoji: Unique Server Identifier Generator
 
+[![Idenmoji Build](https://github.com/mxpanf/identmoji/actions/workflows/identmoji_build.yml/badge.svg)](https://github.com/mxpanf/identmoji/actions/workflows/identmoji_build.yml)
+
 **Identmoji** is a tool that generates a unique identifier for your server using emojis and a code derived from system-specific data. It can output the identifier in text or JSON format and save it to a configuration file for future reference.
 
 > [!NOTE]  
