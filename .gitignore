@@ -1,0 +1,22 @@
+# Ignore the binary file
+identmoji
+
+# Ignore object files and other build artifacts
+*.o
+*.out
+*.exe
+*.log
+
+# Ignore compiled dynamic libraries
+*.so
+*.dylib
+*.dll
+
+# Ignore backup and temporary files
+*~
+*.swp
+.DS_Store
+*.bak
+
+# Ignore build directory if you use one
+/build/
